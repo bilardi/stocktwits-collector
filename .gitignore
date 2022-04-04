@@ -1,0 +1,7 @@
+*#*#
+*~
+*.pyc
+__pycache__
+stocktwits_collector.egg-info
+build
+dist
