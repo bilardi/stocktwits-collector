@@ -3,8 +3,8 @@ import stocktwits_collector
 
 setuptools.setup(
     name="stocktwits-collector",
-    version=aws_saving.__version__,
-    author=aws_saving.__author__,
+    version=stocktwits_collector.__version__,
+    author=stocktwits_collector.__author__,
     author_email="alessandra.bilardi@gmail.com",
     description="Stocktwits collector Python package",
     long_description=open('README.rst').read(),
