@@ -15,5 +15,5 @@ Package contents one class to manage the collection features.
 # license MIT
 # support https://github.com/bilardi/stocktwits-collector/issues
 """
-__version__ = '0.0.1'
+__version__ = '0.0.2'
 __author__ = 'Alessandra Bilardi'
