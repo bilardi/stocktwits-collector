@@ -13,6 +13,7 @@ This package contains the class for collecting the twits of Stocktwits on your l
    :caption: Contents:
 
    overview
+   api
    usage
    development
 

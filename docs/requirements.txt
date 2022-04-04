@@ -2,3 +2,6 @@ sphinx==4.0.1
 sphinx_rtd_theme
 rst2pdf
 nbsphinx
+stocktwits_collector
+stockTwitFetchAPI
+requests
