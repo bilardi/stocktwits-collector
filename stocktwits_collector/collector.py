@@ -105,14 +105,14 @@ class Collector():
 
         if "symbols" in event:
             for symbol in event["symbols"]:
-                #with self.hold_output() as (out, err):
-                   #try:
-                response = self.ts.get_symbol_msgs(symbol_id=symbol, since=event["since"], max=event["max"], limit=event["limit"], callback=None, filter=None)
-                   #except Exception as error:
-                   #    print(event)
-                   #    raise Exception(error)
-                messages.extend(response["messages"])
-
+                with self.hold_output() as (out, err):
+                    try:
+                        response = self.ts.get_symbol_msgs(symbol_id=symbol, since=event["since"], max=event["max"], limit=event["limit"], callback=None, filter=None)
+                    except Exception as error:
+                        print(event)
+                        raise Exception(error)
+                    messages.extend(response["messages"])
+                
         return self.clean_data(messages, event)
 
     def is_younger(self, first_date, second_date):
