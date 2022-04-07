@@ -224,7 +224,8 @@ class Collector():
         chunk = event["chunk"] if "chunk" in event else "day"
 
         if not self.is_same_chunk(cursor["oldest_date"], cursor["earliest_date"], chunk):
-            history = self.clean_history(chunk, cursor, history)
+            messages = self.clean_history(chunk, cursor, messages)
+            cursor = self.get_cursor(messages)
         messages.extend(history)
             
         return cursor, messages
