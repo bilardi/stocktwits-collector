@@ -86,16 +86,37 @@ class TestService(unittest.TestCase, Collector):
         self.assertFalse(self.c.is_younger("2022-02-25T06:54:00Z", "2022-02-16T20:10:00Z"))
         self.assertTrue(self.c.is_younger("2022-02-16T20:10:00Z", "2022-02-25T06:54:00Z"))
 
+    def test_is_same_chunk(self):
+        self.assertTrue(self.c.is_same_chunk("2022-02-25T06:54:00Z", "2022-02-25T20:10:00Z"))
+        self.assertTrue(self.c.is_same_chunk("2022-02-25T06:54:00Z", "2022-02-25T20:10:00Z", chunk = "day"))
+        self.assertFalse(self.c.is_same_chunk("2022-02-25T06:54:00Z", "2022-02-21T20:10:00Z"))
+        self.assertTrue(self.c.is_same_chunk("2022-02-25T06:54:00Z", "2022-02-21T20:10:00Z", chunk = "week"))
+        self.assertFalse(self.c.is_same_chunk("2022-02-25T06:54:00Z", "2022-02-16T20:10:00Z"))
+        self.assertTrue(self.c.is_same_chunk("2022-02-25T06:54:00Z", "2022-02-16T20:10:00Z", chunk = "month"))
+
     def test_get_cursor(self):
         twits = [{"id": 2, "created_at": "2022-02-25T06:54:00Z"}, {"id": 1, "created_at": "2022-02-16T20:10:00Z"}]
-        self.assertEqual(self.c.get_cursor(twits), {"oldest_date": "2022-02-16T20:10:00Z", "min": 1, "max": 2})
+        self.assertEqual(self.c.get_cursor(twits), {"oldest_date": "2022-02-16T20:10:00Z", "min": 1, "earliest_date": "2022-02-25T06:54:00Z", "max": 2})
+
+    def test_clean_history(self):
+        current_history = [{"id": 3, "created_at": "2022-02-25T06:54:00Z"}, {"id": 2, "created_at": "2022-02-21T20:10:00Z"}, {"id": 1, "created_at": "2022-02-16T20:10:00Z"}]
+        history_cleaned = self.c.clean_history("month", {"oldest_date": "2022-02-16T20:10:00Z", "earliest_date": "2022-02-25T06:54:00Z"}, current_history)
+        self.assertEqual(len(history_cleaned), 3)
+        history_cleaned = self.c.clean_history("week", {"oldest_date": "2022-02-16T20:10:00Z", "earliest_date": "2022-02-25T06:54:00Z"}, current_history)
+        self.assertEqual(len(history_cleaned), 2)
+        current_history = [{"id": 3, "created_at": "2022-02-16T20:54:00Z"}, {"id": 2, "created_at": "2022-02-16T20:10:00Z"}, {"id": 1, "created_at": "2022-02-16T06:54:00Z"}]
+        history_cleaned = self.c.clean_history("day", {"oldest_date": "2022-02-16T06:54:00Z", "earliest_date": "2022-02-16T20:54:00Z"}, current_history)
+        self.assertEqual(len(history_cleaned), 3)
+        current_history = [{"id": 3, "created_at": "2022-02-17T20:54:00Z"}, {"id": 2, "created_at": "2022-02-16T20:10:00Z"}, {"id": 1, "created_at": "2022-02-16T06:54:00Z"}]
+        history_cleaned = self.c.clean_history("day", {"oldest_date": "2022-02-16T06:54:00Z", "earliest_date": "2022-02-17T20:54:00Z"}, current_history)
+        self.assertEqual(len(history_cleaned), 2)
 
     def test_walk(self):
         cursor = {"min": 449480803}
         event = {"users": ["ChartMill"]}
         history = self.c.get_data(event)
         cursor, messages = self.c.walk(event, cursor, history)
-        self.assertEqual(cursor, {"oldest_date": "2022-04-03T16:26:00Z", "min": 449480293, "max": 449480488})
+        self.assertEqual(cursor, {"oldest_date": "2022-04-03T16:26:00Z", "min": 449480293, "earliest_date": "2022-04-03T16:28:00Z", "max": 449480488})
         self.assertEqual(history[-1]["id"], messages[-1]["id"])
         self.assertEqual(messages[0]["id"], cursor["max"])
 

@@ -132,6 +132,30 @@ class Collector():
             return True
         return False
 
+    def is_same_chunk(self, first_date, second_date, chunk = "day"):
+        """
+        compare a date with a second date
+
+            Argument:
+                :first_date (str): datetime with format %Y-%m-%dT%H:%M:%SZ 
+                :second_date (str): another date with format %Y-%m-%dT%H:%M:%SZ
+                :chunk (str): day, week or month, default day
+            Returns:
+                a boolean, True if the dates are of the same chunk
+        """
+        first = datetime.strptime(first_date, "%Y-%m-%dT%H:%M:%SZ")
+        second = datetime.strptime(second_date, "%Y-%m-%dT%H:%M:%SZ")
+        is_same = False
+
+        if chunk == "day":
+            is_same = first.strftime("%Y-%m-%d") == second.strftime("%Y-%m-%d")
+        if chunk == "week":
+            is_same = first.strftime("%W") == second.strftime("%W")
+        if chunk == "month":
+            is_same = first.replace(day=1).strftime("%Y-%m-%d") == second.replace(day=1).strftime("%Y-%m-%d")
+
+        return is_same
+
     def get_cursor(self, messages):
         """
         get cursor with oldest date, min ID and max ID
@@ -148,6 +172,40 @@ class Collector():
             "max": messages[0]["id"]
         }
 
+    def clean_history(self, chunk, cursor, history):
+        """
+        clean history from messages with different chunk
+
+            Arguments:
+                :chunk (str): day, week or month
+                :cursor (dict): dictionary with the keys oldest_date, min ID, earliest_date and max (ID)
+                :history (list[dict]): list of messages
+            Returns:
+                history cleaned
+        """
+        chunk = chunk if chunk in ["day", "week", "month"] else "day"
+        same_oldest_date = 0
+        same_earliest_date = 0
+
+        for message in history:
+            if self.is_same_chunk(message["created_at"], cursor["oldest_date"], chunk):
+                same_oldest_date += 1
+            if self.is_same_chunk(message["created_at"], cursor["earliest_date"], chunk):
+                same_earliest_date += 1
+
+        if len(history) == (same_oldest_date + same_earliest_date):
+            current_chunk = cursor["oldest_date"]
+            indexes_to_delete = []
+            if same_oldest_date > same_earliest_date:
+                current_chunk = cursor["earliest_date"]
+            for index, message in enumerate(history):
+                if self.is_same_chunk(message["created_at"], current_chunk):
+                    indexes_to_delete.append(index)
+            for index in indexes_to_delete:
+                del history[index]
+
+        return history
+
     def walk(self, event, cursor, history):
         """
         walk along the messages like a shrimp 
@@ -162,7 +220,12 @@ class Collector():
         event["max"] = cursor["min"]
         messages = self.get_data(event)
         cursor = self.get_cursor(messages)
+        chunk = event["chunk"] if "chunk" in event else "day"
+
+        if not self.is_same_chunk(cursor["oldest_date"], cursor["earliest_date"], chunk):
+            history = self.clean_history(chunk, cursor, history)
         messages.extend(history)
+            
         return cursor, messages
 
     def get_history(self, event):
@@ -190,7 +253,6 @@ class Collector():
         #     while event["min"] < cursor["min"]:
         #         cursor, history = self.walk(event, cursor, history)
 
-        # if oldest rows sono di un altro giorno e prima di start, rimuovile !
         return history
 
     def get_date(self, chunk, date = None, jump_chunk = False):
@@ -225,7 +287,7 @@ class Collector():
                     month = 12
                     year = start.year - 1
                 start = start.replace(month=month, year=year)
-        return start.strftime("%Y-%m-%dT00:00:00Z") 
+        return start.strftime("%Y-%m-%dT00:00:00Z")
 
     def update_event(self, key, value, event):
         """
