@@ -77,9 +77,9 @@ class TestService(unittest.TestCase, Collector):
         # @todo: only_combo test
 
     def test_get_data(self):
-        event = {"users": ["ChartMill"], "since": 449479095, "limit": 2}
+        event = {"users": ["ChartMill"], "min": 449479095, "limit": 2}
         self.assertEqual(self.c.get_data(event), self.c.ts.umh)
-        event = {"symbols": ["TSLA"], "since": 449483123, "limit": 2}
+        event = {"symbols": ["TSLA"], "min": 449483123, "limit": 2}
         self.assertEqual(self.c.get_data(event), self.c.ts.smh)
 
     def test_is_younger(self):
@@ -88,23 +88,23 @@ class TestService(unittest.TestCase, Collector):
 
     def test_get_cursor(self):
         twits = [{"id": 2, "created_at": "2022-02-25T06:54:00Z"}, {"id": 1, "created_at": "2022-02-16T20:10:00Z"}]
-        self.assertEqual(self.c.get_cursor(twits), {"oldest_date": "2022-02-16T20:10:00Z", "since": 1, "max": 2})
+        self.assertEqual(self.c.get_cursor(twits), {"oldest_date": "2022-02-16T20:10:00Z", "min": 1, "max": 2})
 
     def test_walk(self):
-        cursor = {"since": 449480803}
+        cursor = {"min": 449480803}
         event = {"users": ["ChartMill"]}
         history = self.c.get_data(event)
         cursor, messages = self.c.walk(event, cursor, history)
-        self.assertEqual(cursor, {"oldest_date": "2022-04-03T16:26:00Z", "since": 449480293, "max": 449480488})
+        self.assertEqual(cursor, {"oldest_date": "2022-04-03T16:26:00Z", "min": 449480293, "max": 449480488})
         self.assertEqual(history[-1]["id"], messages[-1]["id"])
         self.assertEqual(messages[0]["id"], cursor["max"])
 
     def test_get_history(self):
-        event = {"users": ["ChartMill"], "created_at": "2022-04-03T16:20:00Z"}
+        event = {"users": ["ChartMill"], "start": "2022-04-03T16:20:00Z"}
         self.assertEqual(self.c.get_history(event), self.c.ts.um)
-        event = {"symbols": ["TSLA"], "created_at": "2022-04-03T17:01:11Z"}
+        event = {"symbols": ["TSLA"], "start": "2022-04-03T17:01:11Z"}
         self.assertEqual(self.c.get_history(event), self.c.ts.sm)
-        # @todo: since test
+        # @todo: min test
 
     def test_get_date(self):
         date = datetime.now()
@@ -123,21 +123,21 @@ class TestService(unittest.TestCase, Collector):
         self.assertEqual(self.c.update_event("a", "1", {"a": "A", "b": "B"}), {"a": "1", "b": "B"})
 
     def test_get_temporary_event(self):
-        event = {"users": ["ChartMill"], "created_at": "2022-04-01T16:20:00Z", "chunk": "day"}
+        event = {"users": ["ChartMill"], "start": "2022-04-01T16:20:00Z", "chunk": "day"}
         messages = self.c.get_data(event)
-        self.assertEqual(self.c.get_temporary_event(messages, event, event), {"users": ["ChartMill"], "created_at": "2022-04-03T00:00:00Z", "chunk": "day", "since": 0, "max": 449480803, "limit": 100})
+        self.assertEqual(self.c.get_temporary_event(messages, event, event), {"users": ["ChartMill"], "start": "2022-04-03T00:00:00Z", "chunk": "day", "min": 0, "max": 449480803, "limit": 100})
 
-        event = {"users": ["ChartMill"], "created_at": "2022-04-03T00:00:00Z", "chunk": "day"}
-        current_chunk = {"users": ["ChartMill"], "created_at": "2022-04-03T00:00:00Z", "chunk": "day", "since": 0, "max": 0, "limit": 100}
-        self.assertEqual(self.c.get_temporary_event(messages, current_chunk, event), {"users": ["ChartMill"], "created_at": "2022-04-02T00:00:00Z", "chunk": "day", "since": 0, "max": 0, "limit": 100})
+        event = {"users": ["ChartMill"], "start": "2022-04-03T00:00:00Z", "chunk": "day"}
+        current_chunk = {"users": ["ChartMill"], "start": "2022-04-03T00:00:00Z", "chunk": "day", "min": 0, "max": 0, "limit": 100}
+        self.assertEqual(self.c.get_temporary_event(messages, current_chunk, event), {"users": ["ChartMill"], "start": "2022-04-02T00:00:00Z", "chunk": "day", "min": 0, "max": 0, "limit": 100})
 
-        event = {"users": ["ChartMill"], "created_at": "2022-04-03T00:00:00Z", "chunk": "day"}
-        current_chunk = {"users": ["ChartMill"], "created_at": "2022-04-04T00:00:00Z", "chunk": "day", "since": 0, "max": 0, "limit": 100}
-        self.assertEqual(self.c.get_temporary_event(messages, current_chunk, event), {"users": ["ChartMill"], "created_at": "2022-04-03T00:00:00Z", "chunk": "day", "since": 0, "max": 449480803, "limit": 100})
+        event = {"users": ["ChartMill"], "start": "2022-04-03T00:00:00Z", "chunk": "day"}
+        current_chunk = {"users": ["ChartMill"], "start": "2022-04-04T00:00:00Z", "chunk": "day", "min": 0, "max": 0, "limit": 100}
+        self.assertEqual(self.c.get_temporary_event(messages, current_chunk, event), {"users": ["ChartMill"], "start": "2022-04-03T00:00:00Z", "chunk": "day", "min": 0, "max": 449480803, "limit": 100})
 
-        event = {"users": ["ChartMill"], "created_at": "2022-04-04T16:30:00Z", "chunk": "day"}
-        current_chunk = {"users": ["ChartMill"], "created_at": "2022-04-03T16:20:00Z", "chunk": "day", "since": 0, "max": 0, "limit": 100}
-        self.assertEqual(self.c.get_temporary_event(messages, current_chunk, event), {"users": ["ChartMill"], "created_at": "2022-04-04T16:30:00Z", "chunk": "day", "since": 0, "max": 449480803, "limit": 100})
+        event = {"users": ["ChartMill"], "start": "2022-04-04T16:30:00Z", "chunk": "day"}
+        current_chunk = {"users": ["ChartMill"], "start": "2022-04-03T16:20:00Z", "chunk": "day", "min": 0, "max": 0, "limit": 100}
+        self.assertEqual(self.c.get_temporary_event(messages, current_chunk, event), {"users": ["ChartMill"], "start": "2022-04-04T16:30:00Z", "chunk": "day", "min": 0, "max": 449480803, "limit": 100})
 
 if __name__ == '__main__':
     unittest.main()
