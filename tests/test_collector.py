@@ -160,5 +160,15 @@ class TestService(unittest.TestCase, Collector):
         current_chunk = {"users": ["ChartMill"], "start": "2022-04-03T16:20:00Z", "chunk": "day", "min": 0, "max": 0, "limit": 30}
         self.assertEqual(self.c.get_temporary_event(messages, current_chunk, event), {"users": ["ChartMill"], "start": "2022-04-04T16:30:00Z", "chunk": "day", "min": 0, "max": 449480803, "limit": 30})
 
+    def test_get_file_name(self):
+        history = [{"id": 3, "created_at": "2022-02-16T20:54:00Z"}, {"id": 2, "created_at": "2022-02-16T20:10:00Z"}, {"id": 1, "created_at": "2022-02-16T06:54:00Z"}]
+        event = {"start": "2022-02-16T00:00:00Z", "chunk": "day", "filename_prefix": "history.", "filename_suffix": ".json"}
+        self.assertEqual(self.get_file_name(history, event, event), "history.20220216.json")
+        history = [{"id": 3, "created_at": "2022-02-17T20:54:00Z"}, {"id": 2, "created_at": "2022-02-16T20:10:00Z"}, {"id": 1, "created_at": "2022-02-16T06:54:00Z"}]
+        event = {"start": "2022-02-17T16:30:00Z", "chunk": "day", "filename_prefix": "history.", "filename_suffix": ".json"}
+        self.assertEqual(self.get_file_name(history, event, event), "history.20220217.json")
+        event = {"start": "2022-02-16T16:30:00Z", "chunk": "day", "filename_prefix": "history.", "filename_suffix": ".json"}
+        self.assertEqual(self.get_file_name(history, event, event), "history.20220216.json")
+
 if __name__ == '__main__':
     unittest.main()

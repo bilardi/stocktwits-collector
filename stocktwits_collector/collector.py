@@ -202,7 +202,7 @@ class Collector():
             for index, message in enumerate(history):
                 if self.is_same_chunk(message["created_at"], current_chunk):
                     indexes_to_delete.append(index)
-            for index in indexes_to_delete:
+            for index in reversed(indexes_to_delete):
                 del history[index]
 
         return history
@@ -332,6 +332,24 @@ class Collector():
         next_chunk["max"] = cursor["max"]
         return next_chunk
 
+    def get_file_name(self, history, current_chunk, event):
+        """
+        get filename
+
+           Arguments:
+                :history (list[dict]): list of messages
+                :current_chunk (dict): dictionary like event
+                :event (dict): dictionary fully described in save_history()
+            Returns:
+                the file name
+        """
+        chunk = datetime.strptime(current_chunk["start"], "%Y-%m-%dT%H:%M:%SZ")
+        next_chunk = self.get_temporary_event(history, current_chunk, event)
+        cursor = self.get_cursor(history)
+        if self.get_date(event["chunk"], next_chunk["start"]) == self.get_date(event["chunk"], cursor["earliest_date"]):
+            chunk = datetime.strptime(next_chunk["start"], "%Y-%m-%dT%H:%M:%SZ")
+        return f'{event["filename_prefix"]}{chunk.strftime("%Y%m%d")}{event["filename_suffix"]}'
+
     def save_data(self, history, current_chunk, event):
         """
         save data
@@ -343,13 +361,8 @@ class Collector():
             Returns:
                 the temporary chunk event updated with the partial start and new max
         """
-        chunk = datetime.strptime(current_chunk["start"], "%Y-%m-%dT%H:%M:%SZ")
+        filename = self.get_file_name(history, current_chunk, event)
         next_chunk = self.get_temporary_event(history, current_chunk, event)
-        cursor = self.get_cursor(history)
-        if self.get_date(next_chunk["start"]) == self.get_date(cursor["oldest_date"]):
-            chunk = datetime.strptime(next_chunk["start"], "%Y-%m-%dT%H:%M:%SZ")
-
-        filename = f'{event["filename_prefix"]}{chunk.strftime("%Y%m%d")}{event["filename_suffix"]}'
         with open(filename, "a") as fh:
             json.dump(history, fh)
         return next_chunk
