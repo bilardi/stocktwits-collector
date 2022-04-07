@@ -357,7 +357,7 @@ class Collector():
 
     def save_history(self, event):
         """
-        save history recovered by Collector class from Stocktwist, default last 30 messages on files splitted by chunk per day, week or month
+        save history from Stocktwist on files splitted by chunk per day, week or month
 
             Arguments:
                 :event (dict):
