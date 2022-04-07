@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3] - 2022-04-07
+
+### Fixed
+- fixed cleaning the history according to the chunk
+
 ## [0.1.2] - 2022-04-07
 
 ### Fixed
@@ -43,7 +48,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - the init files of package and tests
 - the documentation by sphinx
 
-[Unreleased]: https://github.com/bilardi/aws-saving/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/bilardi/aws-saving/compare/v0.1.3...HEAD
+[0.1.3]: https://github.com/bilardi/aws-saving/releases/tag/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/bilardi/aws-saving/releases/tag/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/bilardi/aws-saving/releases/tag/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/bilardi/aws-saving/releases/tag/v0.0.3...v0.1.0

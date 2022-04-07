@@ -197,8 +197,6 @@ class Collector():
         if len(history) == (same_oldest_date + same_earliest_date):
             current_chunk = cursor["oldest_date"]
             indexes_to_delete = []
-            if same_oldest_date > same_earliest_date:
-                current_chunk = cursor["earliest_date"]
             for index, message in enumerate(history):
                 if self.is_same_chunk(message["created_at"], current_chunk):
                     indexes_to_delete.append(index)

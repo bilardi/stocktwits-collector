@@ -109,6 +109,9 @@ class TestService(unittest.TestCase, Collector):
         self.assertEqual(len(history_cleaned), 3)
         current_history = [{"id": 3, "created_at": "2022-02-17T20:54:00Z"}, {"id": 2, "created_at": "2022-02-16T20:10:00Z"}, {"id": 1, "created_at": "2022-02-16T06:54:00Z"}]
         history_cleaned = self.c.clean_history("day", {"oldest_date": "2022-02-16T06:54:00Z", "earliest_date": "2022-02-17T20:54:00Z"}, current_history)
+        self.assertEqual(len(history_cleaned), 1)
+        current_history = [{"id": 3, "created_at": "2022-02-17T20:54:00Z"}, {"id": 2, "created_at": "2022-02-17T20:10:00Z"}, {"id": 1, "created_at": "2022-02-16T06:54:00Z"}]
+        history_cleaned = self.c.clean_history("day", {"oldest_date": "2022-02-16T06:54:00Z", "earliest_date": "2022-02-17T20:54:00Z"}, current_history)
         self.assertEqual(len(history_cleaned), 2)
 
     def test_walk(self):
