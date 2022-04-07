@@ -225,7 +225,7 @@ class Collector():
 
         if not self.is_same_chunk(cursor["oldest_date"], cursor["earliest_date"], chunk):
             messages = self.clean_history(chunk, cursor, messages)
-            cursor = self.get_cursor(messages)
+            #cursor = self.get_cursor(messages)
         messages.extend(history)
             
         return cursor, messages
@@ -346,8 +346,6 @@ class Collector():
         chunk = datetime.strptime(current_chunk["start"], "%Y-%m-%dT%H:%M:%SZ")
         next_chunk = self.get_temporary_event(history, current_chunk, event)
         cursor = self.get_cursor(history)
-        # if cursor["oldest_date"] != cursor["earliest_date"]:
-        #   if oldest_date + 1 == earliest_date and 
         if self.get_date(next_chunk["start"]) == self.get_date(cursor["oldest_date"]):
             chunk = datetime.strptime(next_chunk["start"], "%Y-%m-%dT%H:%M:%SZ")
 
