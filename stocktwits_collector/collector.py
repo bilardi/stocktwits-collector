@@ -76,7 +76,7 @@ class Collector():
 
     def get_data(self, event):
         """
-        get data from Stocktwits, default last 100 messages
+        get data from Stocktwits, default last 30 messages
 
             Arguments:
                 :event (dict): dictionary fully described in save_history()
@@ -84,7 +84,7 @@ class Collector():
                     users (list of str): names of users to fetch
                     min (int): optional, min ID
                     max (int): optional, max ID
-                    limit (int): optional, defalt 100 messages
+                    limit (int): optional, defalt 30 messages
             Returns:
                 list of messages
         """
@@ -97,7 +97,7 @@ class Collector():
             event["max"] = 0
 
         if "limit" not in event:
-            event["limit"] = 100
+            event["limit"] = 30
 
         if "users" in event:
             for user in event["users"]:
@@ -231,7 +231,7 @@ class Collector():
 
     def get_history(self, event):
         """
-        get history from Stocktwist, default last 100 messages
+        get history from Stocktwist, default last 30 messages
 
             Arguments:
                 :event (dict): dictionary fully described in save_history()
@@ -357,7 +357,7 @@ class Collector():
 
     def save_history(self, event):
         """
-        save history recovered by Collector class from Stocktwist, default last 100 messages on files splitted by chunk per day, week or month
+        save history recovered by Collector class from Stocktwist, default last 30 messages on files splitted by chunk per day, week or month
 
             Arguments:
                 :event (dict):
@@ -366,7 +366,7 @@ class Collector():
                     only_combo (bool): optional, if True, fetches only messages of those symbols posted from those users
                     min (int): optional, min ID
                     max (int): optional, max ID
-                    limit (int): optional, default 100 messages
+                    limit (int): optional, default 30 messages
                     start (str): optional, min datetime
                     chunk (str): optional (day, week or month), default day
                     filename_prefix (str): optional, default "history."
