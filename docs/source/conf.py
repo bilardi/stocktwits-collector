@@ -22,8 +22,8 @@ copyright = '2022, Alessandra Bilardi'
 author = 'Alessandra Bilardi'
 
 # The full version, including alpha/beta/rc tags
-version = '0.0.3'
-release = '0.0.3'
+version = '0.1.0'
+release = '0.1.0'
 
 # specify the master doc, otherwise the build at read the docs fails
 master_doc = 'index'
@@ -33,7 +33,7 @@ master_doc = 'index'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['nbsphinx']
+extensions = ['nbsphinx','sphinx.ext.autosummary','sphinx.ext.autodoc','sphinx.ext.intersphinx']
 #extensions = ['rst2pdf.pdfbuilder']
 #pdf_documents = [('index', u'stocktwits-collector', u'Stocktwits collector', u'Alessandra Bilardi'),]
 

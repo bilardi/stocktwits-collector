@@ -29,6 +29,7 @@ class Collector():
                 with hold_output() as (out, err):
                     method_with_a_print()
                 captured_output = out.getvalue().strip()
+
         """
         new_out, new_err = StringIO(), StringIO()
         old_out, old_err = sys.stdout, sys.stderr
