@@ -146,19 +146,19 @@ class TestService(unittest.TestCase, Collector):
     def test_get_temporary_event(self):
         event = {"users": ["ChartMill"], "start": "2022-04-01T16:20:00Z", "chunk": "day"}
         messages = self.c.get_data(event)
-        self.assertEqual(self.c.get_temporary_event(messages, event, event), {"users": ["ChartMill"], "start": "2022-04-03T00:00:00Z", "chunk": "day", "min": 0, "max": 449480803, "limit": 100})
+        self.assertEqual(self.c.get_temporary_event(messages, event, event), {"users": ["ChartMill"], "start": "2022-04-03T00:00:00Z", "chunk": "day", "min": 0, "max": 449480803, "limit": 30})
 
         event = {"users": ["ChartMill"], "start": "2022-04-03T00:00:00Z", "chunk": "day"}
-        current_chunk = {"users": ["ChartMill"], "start": "2022-04-03T00:00:00Z", "chunk": "day", "min": 0, "max": 0, "limit": 100}
-        self.assertEqual(self.c.get_temporary_event(messages, current_chunk, event), {"users": ["ChartMill"], "start": "2022-04-02T00:00:00Z", "chunk": "day", "min": 0, "max": 0, "limit": 100})
+        current_chunk = {"users": ["ChartMill"], "start": "2022-04-03T00:00:00Z", "chunk": "day", "min": 0, "max": 0, "limit": 30}
+        self.assertEqual(self.c.get_temporary_event(messages, current_chunk, event), {"users": ["ChartMill"], "start": "2022-04-02T00:00:00Z", "chunk": "day", "min": 0, "max": 0, "limit": 30})
 
         event = {"users": ["ChartMill"], "start": "2022-04-03T00:00:00Z", "chunk": "day"}
-        current_chunk = {"users": ["ChartMill"], "start": "2022-04-04T00:00:00Z", "chunk": "day", "min": 0, "max": 0, "limit": 100}
-        self.assertEqual(self.c.get_temporary_event(messages, current_chunk, event), {"users": ["ChartMill"], "start": "2022-04-03T00:00:00Z", "chunk": "day", "min": 0, "max": 449480803, "limit": 100})
+        current_chunk = {"users": ["ChartMill"], "start": "2022-04-04T00:00:00Z", "chunk": "day", "min": 0, "max": 0, "limit": 30}
+        self.assertEqual(self.c.get_temporary_event(messages, current_chunk, event), {"users": ["ChartMill"], "start": "2022-04-03T00:00:00Z", "chunk": "day", "min": 0, "max": 449480803, "limit": 30})
 
         event = {"users": ["ChartMill"], "start": "2022-04-04T16:30:00Z", "chunk": "day"}
-        current_chunk = {"users": ["ChartMill"], "start": "2022-04-03T16:20:00Z", "chunk": "day", "min": 0, "max": 0, "limit": 100}
-        self.assertEqual(self.c.get_temporary_event(messages, current_chunk, event), {"users": ["ChartMill"], "start": "2022-04-04T16:30:00Z", "chunk": "day", "min": 0, "max": 449480803, "limit": 100})
+        current_chunk = {"users": ["ChartMill"], "start": "2022-04-03T16:20:00Z", "chunk": "day", "min": 0, "max": 0, "limit": 30}
+        self.assertEqual(self.c.get_temporary_event(messages, current_chunk, event), {"users": ["ChartMill"], "start": "2022-04-04T16:30:00Z", "chunk": "day", "min": 0, "max": 449480803, "limit": 30})
 
 if __name__ == '__main__':
     unittest.main()
