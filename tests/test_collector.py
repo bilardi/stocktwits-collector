@@ -1,4 +1,5 @@
 import unittest
+import os
 import json
 from datetime import datetime
 from stocktwits_collector.collector import Collector
@@ -100,18 +101,18 @@ class TestService(unittest.TestCase, Collector):
 
     def test_clean_history(self):
         current_history = [{"id": 3, "created_at": "2022-02-25T06:54:00Z"}, {"id": 2, "created_at": "2022-02-21T20:10:00Z"}, {"id": 1, "created_at": "2022-02-16T20:10:00Z"}]
-        history_cleaned = self.c.clean_history("month", {"oldest_date": "2022-02-16T20:10:00Z", "earliest_date": "2022-02-25T06:54:00Z"}, current_history)
+        history_cleaned = self.c.clean_history({"oldest_date": "2022-02-16T20:10:00Z", "earliest_date": "2022-02-25T06:54:00Z"}, current_history, "month")
         self.assertEqual(len(history_cleaned), 3)
-        history_cleaned = self.c.clean_history("week", {"oldest_date": "2022-02-16T20:10:00Z", "earliest_date": "2022-02-25T06:54:00Z"}, current_history)
+        history_cleaned = self.c.clean_history({"oldest_date": "2022-02-16T20:10:00Z", "earliest_date": "2022-02-25T06:54:00Z"}, current_history, "week")
         self.assertEqual(len(history_cleaned), 2)
         current_history = [{"id": 3, "created_at": "2022-02-16T20:54:00Z"}, {"id": 2, "created_at": "2022-02-16T20:10:00Z"}, {"id": 1, "created_at": "2022-02-16T06:54:00Z"}]
-        history_cleaned = self.c.clean_history("day", {"oldest_date": "2022-02-16T06:54:00Z", "earliest_date": "2022-02-16T20:54:00Z"}, current_history)
+        history_cleaned = self.c.clean_history({"oldest_date": "2022-02-16T06:54:00Z", "earliest_date": "2022-02-16T20:54:00Z"}, current_history, "day")
         self.assertEqual(len(history_cleaned), 3)
         current_history = [{"id": 3, "created_at": "2022-02-17T20:54:00Z"}, {"id": 2, "created_at": "2022-02-16T20:10:00Z"}, {"id": 1, "created_at": "2022-02-16T06:54:00Z"}]
-        history_cleaned = self.c.clean_history("day", {"oldest_date": "2022-02-16T06:54:00Z", "earliest_date": "2022-02-17T20:54:00Z"}, current_history)
+        history_cleaned = self.c.clean_history({"oldest_date": "2022-02-16T06:54:00Z", "earliest_date": "2022-02-17T20:54:00Z"}, current_history, "day")
         self.assertEqual(len(history_cleaned), 1)
         current_history = [{"id": 3, "created_at": "2022-02-17T20:54:00Z"}, {"id": 2, "created_at": "2022-02-17T20:10:00Z"}, {"id": 1, "created_at": "2022-02-16T06:54:00Z"}]
-        history_cleaned = self.c.clean_history("day", {"oldest_date": "2022-02-16T06:54:00Z", "earliest_date": "2022-02-17T20:54:00Z"}, current_history)
+        history_cleaned = self.c.clean_history({"oldest_date": "2022-02-16T06:54:00Z", "earliest_date": "2022-02-17T20:54:00Z"}, current_history, "day")
         self.assertEqual(len(history_cleaned), 2)
 
     def test_walk(self):
@@ -121,7 +122,7 @@ class TestService(unittest.TestCase, Collector):
         cursor, messages = self.c.walk(event, cursor, history)
         self.assertEqual(cursor, {"oldest_date": "2022-04-03T16:26:00Z", "min": 449480293, "earliest_date": "2022-04-03T16:28:00Z", "max": 449480488})
         self.assertEqual(history[-1]["id"], messages[-1]["id"])
-        self.assertEqual(messages[0]["id"], cursor["max"])
+        self.assertEqual(messages[0]["id"], 449480803)
 
     def test_get_history(self):
         event = {"users": ["ChartMill"], "start": "2022-04-03T16:20:00Z"}
@@ -149,7 +150,7 @@ class TestService(unittest.TestCase, Collector):
     def test_get_temporary_event(self):
         event = {"users": ["ChartMill"], "start": "2022-04-01T16:20:00Z", "chunk": "day"}
         messages = self.c.get_data(event)
-        self.assertEqual(self.c.get_temporary_event(messages, event, event), {"users": ["ChartMill"], "start": "2022-04-03T00:00:00Z", "chunk": "day", "min": 0, "max": 449480803, "limit": 30})
+        self.assertEqual(self.c.get_temporary_event(messages, event, event), {"users": ["ChartMill"], "start": "2022-04-03T00:00:00Z", "chunk": "day", "min": 0, "max": 449480585, "limit": 30})
 
         event = {"users": ["ChartMill"], "start": "2022-04-03T00:00:00Z", "chunk": "day"}
         current_chunk = {"users": ["ChartMill"], "start": "2022-04-03T00:00:00Z", "chunk": "day", "min": 0, "max": 0, "limit": 30}
@@ -157,11 +158,11 @@ class TestService(unittest.TestCase, Collector):
 
         event = {"users": ["ChartMill"], "start": "2022-04-03T00:00:00Z", "chunk": "day"}
         current_chunk = {"users": ["ChartMill"], "start": "2022-04-04T00:00:00Z", "chunk": "day", "min": 0, "max": 0, "limit": 30}
-        self.assertEqual(self.c.get_temporary_event(messages, current_chunk, event), {"users": ["ChartMill"], "start": "2022-04-03T00:00:00Z", "chunk": "day", "min": 0, "max": 449480803, "limit": 30})
+        self.assertEqual(self.c.get_temporary_event(messages, current_chunk, event), {"users": ["ChartMill"], "start": "2022-04-03T00:00:00Z", "chunk": "day", "min": 0, "max": 449480585, "limit": 30})
 
         event = {"users": ["ChartMill"], "start": "2022-04-04T16:30:00Z", "chunk": "day"}
         current_chunk = {"users": ["ChartMill"], "start": "2022-04-03T16:20:00Z", "chunk": "day", "min": 0, "max": 0, "limit": 30}
-        self.assertEqual(self.c.get_temporary_event(messages, current_chunk, event), {"users": ["ChartMill"], "start": "2022-04-04T16:30:00Z", "chunk": "day", "min": 0, "max": 449480803, "limit": 30})
+        self.assertEqual(self.c.get_temporary_event(messages, current_chunk, event), {"users": ["ChartMill"], "start": "2022-04-04T16:30:00Z", "chunk": "day", "min": 0, "max": 449480585, "limit": 30})
 
     def test_get_file_name(self):
         history = [{"id": 3, "created_at": "2022-02-16T20:54:00Z"}, {"id": 2, "created_at": "2022-02-16T20:10:00Z"}, {"id": 1, "created_at": "2022-02-16T06:54:00Z"}]
@@ -172,6 +173,22 @@ class TestService(unittest.TestCase, Collector):
         self.assertEqual(self.get_file_name(history, event, event), "history.20220217.json")
         event = {"start": "2022-02-16T16:30:00Z", "chunk": "day", "filename_prefix": "history.", "filename_suffix": ".json"}
         self.assertEqual(self.get_file_name(history, event, event), "history.20220216.json")
+
+    def test_save_data(self):
+        history = [{"id": 3, "created_at": "2022-02-16T20:54:00Z"}, {"id": 2, "created_at": "2022-02-16T20:10:00Z"}, {"id": 1, "created_at": "2022-02-16T06:54:00Z"}]
+        event = {"start": "2022-02-16T00:00:00Z", "chunk": "day", "filename_prefix": "history.", "filename_suffix": ".json"}
+        filename = "history.20220216.json"
+        if os.path.isfile(filename):
+            os.remove(filename)
+        self.assertFalse(os.path.isfile(filename))
+        self.c.save_data(history, event, event)
+        self.assertTrue(os.path.isfile(filename))
+        with open(filename, "r") as fh:
+            data = json.loads(fh.read())
+        self.c.save_data(history, event, event)
+        with open(filename, "r") as fh:
+            data = json.loads(fh.read())
+        os.remove(filename)
 
 if __name__ == '__main__':
     unittest.main()

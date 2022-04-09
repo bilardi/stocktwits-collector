@@ -3,6 +3,7 @@
     A collection of methods to simplify your downloading
 """
 import sys
+import warnings
 from contextlib import contextmanager
 from io import StringIO
 import json
@@ -113,7 +114,7 @@ class Collector():
                         print(event)
                         raise Exception(error)
                     messages.extend(response["messages"])
-                
+
         return self.clean_data(messages, event)
 
     def is_younger(self, first_date, second_date):
@@ -173,28 +174,29 @@ class Collector():
             "max": messages[0]["id"]
         }
 
-    def clean_history(self, chunk, cursor, history):
+    def clean_history(self, cursor, history, chunk = "day"):
         """
         clean history from messages with different chunk
 
             Arguments:
-                :chunk (str): day, week or month
                 :cursor (dict): dictionary with the keys oldest_date, min ID, earliest_date and max (ID)
                 :history (list[dict]): list of messages
+                :chunk (str): day, week or month, default day
             Returns:
                 history cleaned
         """
-        chunk = chunk if chunk in ["day", "week", "month"] else "day"
+        history_length = 0
         same_oldest_date = 0
         same_earliest_date = 0
 
         for message in history:
+            history_length += 1
             if self.is_same_chunk(message["created_at"], cursor["oldest_date"], chunk):
                 same_oldest_date += 1
             if self.is_same_chunk(message["created_at"], cursor["earliest_date"], chunk):
                 same_earliest_date += 1
 
-        if len(history) == (same_oldest_date + same_earliest_date):
+        if history_length == (same_oldest_date + same_earliest_date):
             current_chunk = cursor["oldest_date"]
             indexes_to_delete = []
             for index, message in enumerate(history):
@@ -202,6 +204,8 @@ class Collector():
                     indexes_to_delete.append(index)
             for index in reversed(indexes_to_delete):
                 del history[index]
+        elif not history_length == same_oldest_date and not history_length == same_earliest_date:
+            warnings.warn(f"method clean_history, messages amount: {history_length}, {same_oldest_date} messages of {cursor['oldest_date']} and {same_earliest_date} messages of {cursor['earliest_date']}")
 
         return history
 
@@ -214,7 +218,7 @@ class Collector():
                 :cursor (dict): dictionary with the keys oldest_date, min ID, earliest_date and max (ID)
                 :history (list[dict]): list of messages
             Returns:
-                cursor, messages
+                cursor, history
         """
         event["max"] = cursor["min"]
         messages = self.get_data(event)
@@ -222,11 +226,11 @@ class Collector():
         chunk = event["chunk"] if "chunk" in event else "day"
 
         if not self.is_same_chunk(cursor["oldest_date"], cursor["earliest_date"], chunk):
-            messages = self.clean_history(chunk, cursor, messages)
-            #cursor = self.get_cursor(messages)
-        messages.extend(history)
-            
-        return cursor, messages
+            messages = self.clean_history(cursor, messages, chunk)
+            cursor = self.get_cursor(messages)
+        history.extend(messages)
+
+        return cursor, history
 
     def get_history(self, event):
         """
@@ -235,6 +239,7 @@ class Collector():
             Arguments:
                 :event (dict): dictionary fully described in save_history()
                     start (datetime): optional, min datetime
+                    is_verbose (bool): optional, if True comments will be printed
             Returns:
                 list of messages
         """
@@ -246,7 +251,7 @@ class Collector():
             cursor = self.get_cursor(messages)
             while self.is_younger(event["start"], cursor["oldest_date"]) and not event["start"] == cursor["oldest_date"]:
                 if "is_verbose" in event and event["is_verbose"] is True:
-                    print("get_history", event["start"], cursor["oldest_date"])
+                    print(f"method get_history, start: {event['start']}, cursor: {cursor['oldest_date']}")
                 cursor, history = self.walk(event, cursor, history)
         # elif "min" in event and event["min"] > 0:
         #     cursor = self.get_cursor(messages)
@@ -255,12 +260,12 @@ class Collector():
 
         return history
 
-    def get_date(self, chunk, date = None, jump_chunk = False):
+    def get_date(self, chunk = "day", date = None, jump_chunk = False):
         """
         get date at midnight about chunk
 
             Arguments:
-                :chunk (str): day, week or month
+                :chunk (str): day, week or month, default day
                 :date (str): datetime with format %Y-%m-%dT%H:%M:%SZ
                 :jump_chunk (bool): True if you want to jump one chunk
             Returns:
@@ -327,7 +332,7 @@ class Collector():
                 return next_chunk
             else:
                 next_chunk["start"] = event["start"]
-        next_chunk["max"] = cursor["max"]
+        next_chunk["max"] = cursor["min"]
         return next_chunk
 
     def get_file_name(self, history, current_chunk, event):
@@ -361,7 +366,12 @@ class Collector():
         """
         filename = self.get_file_name(history, current_chunk, event)
         next_chunk = self.get_temporary_event(history, current_chunk, event)
-        with open(filename, "a") as fh:
+        cursor = self.get_cursor(history)
+        if not self.is_same_chunk(cursor["oldest_date"], cursor["earliest_date"], event["chunk"]):
+            history = self.clean_history(cursor, history, event["chunk"])
+            cursor = self.get_cursor(history)
+            next_chunk["max"] = cursor["min"]
+        with open(filename, "w") as fh:
             json.dump(history, fh)
         return next_chunk
 
@@ -381,6 +391,7 @@ class Collector():
                     chunk (str): optional (day, week or month), default day
                     filename_prefix (str): optional, default "history."
                     filename_suffix (str): optional, default ".json"
+                    is_verbose (bool): optional, if True comments will be printed
             Returns:
                 last temporary chunk event discarded
         """
@@ -405,12 +416,12 @@ class Collector():
 
         if "start" in event:
             if "is_verbose" in event and event["is_verbose"] is True:
-                print("save_history", event["start"], cursor["oldest_date"])
+                print(f"method save_history, start: {event['start']}, cursor: {cursor['oldest_date']}, next chunk: {chunk['start']}")
             while self.is_younger(event["start"], chunk["start"]):
                 history = self.get_history(chunk)
                 chunk = self.save_data(history, chunk, event)
                 if "is_verbose" in event and event["is_verbose"] is True:
-                    print("save_history", event["start"], chunk["start"])
+                    print(f"method save_history, start: {event['start']}, cursor: {cursor['oldest_date']}, next chunk: {chunk['start']}")
                 history = []
         # elif "min" in event and event["min"] > 0:
         #     while event["min"] < cursor["min"]:

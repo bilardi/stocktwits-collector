@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2022-04-09
+
+### Changed
+- parameters of get_history
+
+### Added
+- chunk default of get_date
+- integration tests
+
+### Fixed
+- management of history
+
 ## [0.1.3] - 2022-04-07
 
 ### Fixed
