@@ -18,9 +18,72 @@ And these are optionals:
 * **chunk**, it is the chunk (day, week or month) in which you want to split the data
 * **filename_prefix**, it is the prefix name of files where you want to save the data
 * **filename_suffix**, it is the suffix name of files where you want to save the data
+* **is_verbose**, when you want to print some information to understand what the system is saving, it is a boolean
 
 Without optional parameters, the system downloads the last 30 messages and prints those in the output. If you want to save that on a file (or more files), you have to use at least the **chunk** parameter.
 
 Examples
 ########
 
+Remeber to install the package by pip
+
+.. code-block:: bash
+
+    pip3 install stocktwits-collector
+
+or by requirements.txt contains one line with **stocktwits-collector**
+
+.. code-block:: bash
+
+    pip3 install --upgrade -r requirements.txt
+
+
+.. code-block:: python
+
+    import os
+    import json
+    import pandas as pd
+
+    from stocktwits_collector.collector import Collector
+    sc = Collector()
+
+    # download last messages up to 30
+    messages = sc.get_history({'symbols': ['TSLA'], 'limit': 4})
+    # download the messages from a date to today
+    messages = sc.get_history({'symbols': ['TSLA'], 'start': '2022-04-04T00:00:00Z'})
+    # save the messages on files splitted per chunk from a date to max ID
+    chunk = sc.save_history({'symbols': ['TSLA'], 'start': '2022-04-04T00:00:00Z', 'chunk': 'day'})
+
+    # load data from one file
+    with open('history.20220404.json', 'r') as f:
+        data = json.loads(f.read())
+    df = pd.json_normalize(
+        data,
+        meta=[
+            'id', 'body', 'created_at',
+            ['user', 'id'],
+            ['user', 'username'],
+            ['entities', 'sentiment', 'basic']
+        ]
+    )
+    twits = df[['id', 'body', 'created_at', 'user.username', 'entities.sentiment.basic']]
+
+    # load data from multiple files
+    frames = []
+    path = '.'
+    for file in os.listdir(path):
+        filename = f"{path}/{file}"
+        with open(filename, 'r') as f:
+            data = json.loads(f.read())
+            frames.append(pd.json_normalize(
+                data,
+                meta=[
+                    'id', 'body', 'created_at',
+                    ['user', 'id'],
+                    ['user', 'username'],
+                    ['entities', 'sentiment', 'basic']
+                ]
+              )
+            )
+    df = pd.concat(frames).sort_values(by=['id'])
+    twits = df[['id', 'body', 'created_at', 'user.username', 'entities.sentiment.basic']]

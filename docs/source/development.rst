@@ -14,6 +14,21 @@ Run tests
     pip3 install --upgrade -r requirements.txt
     python3 -m unittest discover -v
 
+There is also a script for integration tests, but it is only for specific changes
+
+.. code-block:: bash
+
+    # run API with chunk day # around 160s
+    python3 -m unittest tests/integration_test.py
+    # run API with chunk week # around 400s
+    CHUNKS=week python3 -m unittest tests/integration_test.py
+    # run API with chunk month # around 1600s
+    CHUNKS=month python3 -m unittest tests/integration_test.py
+    # run API with chunk day, week and month
+    CHUNKS=all python3 -m unittest tests/integration_test.py
+    # run API with verbose and chunk day
+    VERBOSE=True python3 -m unittest tests/integration_test.py
+
 Run make
 ########
 
