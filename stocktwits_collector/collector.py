@@ -8,7 +8,8 @@ from contextlib import contextmanager
 from io import StringIO
 import json
 from datetime import datetime, timedelta
-import stockTwitFetchAPI.stocktwitapi as st
+import stocktwits_collector.streamer as s
+# import stockTwitFetchAPI.stocktwitapi as st
 
 class Collector():
     ts = None
@@ -16,7 +17,8 @@ class Collector():
         """
         the core of API is the package stockTwitFetchAPI with the class twitStreamer
         """
-        self.ts = st.twitStreamer()
+        #self.ts = st.twitStreamer()
+        self.ts = s.Streamer()
 
     @contextmanager
     def hold_output(self):
