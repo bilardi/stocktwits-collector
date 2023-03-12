@@ -7,6 +7,7 @@ import warnings
 from contextlib import contextmanager
 from io import StringIO
 import json
+import time
 from datetime import datetime, timedelta
 import stocktwits_collector.streamer as s
 # import stockTwitFetchAPI.stocktwitapi as st
@@ -77,7 +78,7 @@ class Collector():
                 messages = list({ message["id"] : message for message in messages if self.there_is_symbol(message["symbols"], event["symbols"]) and message["user"]["username"] in event["users"] }.values())
         return messages
 
-    def get_data(self, event):
+    def get_data(self, event, count = 0):
         """
         get data from Stocktwits, default last 30 messages
 
@@ -88,6 +89,7 @@ class Collector():
                     min (int): optional, min ID
                     max (int): optional, max ID
                     limit (int): optional, defalt 30 messages
+                :count (int): counter to manage a request exception, probably for Gateway Timeout (504)
             Returns:
                 list of messages
         """
@@ -113,8 +115,12 @@ class Collector():
                     try:
                         response = self.ts.get_symbol_msgs(symbol_id=symbol, since=event["min"], max=event["max"], limit=event["limit"], callback=None, filter=None)
                     except Exception as error:
-                        print(event)
-                        raise Exception(error)
+                        count = count + 1
+                        if count == 1:
+                            time.sleep(60)
+                            return self.get_data(event, 1)
+                        else:
+                            raise Exception(error)
                     messages.extend(response["messages"])
 
         return self.clean_data(messages, event)
